@@ -7,5 +7,9 @@
 		"**/.DS_Store": true,
 		"**/*.o": true,
 		"**/*.exe": true,
+	},
+	"files.associations": {
+		"tower.h": "c",
+		"definitions.h": "c"
 	}
 }

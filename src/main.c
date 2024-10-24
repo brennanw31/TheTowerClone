@@ -16,7 +16,7 @@ int main(void)
     // Local variables
     Rectangle enemies[MAX_ENEMIES] = {};
     Vector2 posn = {HCENTER, VCENTER - CIRCLE_RADIUS};
-    int frame_counter = 0;
+    int frame_counter = potato();
     int enemy_counter = 0;
     float enemy_speed = 2.0f;
     float tower_speed = 9.0f;
