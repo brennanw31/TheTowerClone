@@ -53,7 +53,7 @@ RAYLIB_H_INSTALL_PATH ?= $(DESTDIR)/include
 RAYLIB_LIBTYPE        ?= STATIC
 
 # Build mode for project: DEBUG or RELEASE
-BUILD_MODE            ?= RELEASE
+BUILD_MODE            ?= DEBUG
 
 # Use external GLFW library instead of rglfw module
 # TODO: Review usage on Linux. Target version of choice. Switch on -lglfw or -lglfw3
@@ -351,8 +351,10 @@ rwildcard=$(foreach d,$(wildcard $1*),$(call rwildcard,$d/,$2) $(filter $(subst 
 SRC_DIR = src
 OBJ_DIR = obj
 
-SRC = $(wildcard $(SRC_DIR)/*.c)
-OBJS = $(patsubst $(SRC_DIR)/%.c, $(OBJ_DIR)/%.o, $(SRC))
+# Define all object files from source files
+SRC = $(call rwildcard, *.c, *.h)
+#OBJS = $(SRC:$(SRC_DIR)/%.c=$(OBJ_DIR)/%.o)
+OBJS ?= src/main.c src/tower.c src/enemy.c
 
 # For Android platform we call a custom Makefile.Android
 ifeq ($(PLATFORM),PLATFORM_ANDROID)
