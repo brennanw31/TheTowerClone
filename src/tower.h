@@ -4,9 +4,9 @@
 #include "definitions.h"
 
 // Literal constants
-#define TOWER_TOP_POINT     (Vector2){ (float)HCENTER, (float)VCENTER + 50.0f }
-#define TOWER_RIGHT_POINT   (Vector2){ (float)HCENTER + 57.735f, (float)VCENTER - 50.0f }
-#define TOWER_LEFT_POINT    (Vector2){ (float)HCENTER - 57.735f, (float)VCENTER - 50.0f }
+#define TOWER_TOP_POINT     (Vector2){ (float)HCENTER, (float)VCENTER - 21.65f }
+#define TOWER_RIGHT_POINT   (Vector2){ (float)HCENTER + 25.0f, (float)VCENTER + 21.65f }
+#define TOWER_LEFT_POINT    (Vector2){ (float)HCENTER - 25.0f, (float)VCENTER + 21.65f }
 
 #define BASE_HEALTH         ( 10.0f )
 #define BASE_REGEN          ( 0.0f )

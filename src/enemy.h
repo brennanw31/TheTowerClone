@@ -10,7 +10,7 @@
 #define BASIC_ENEMY_HEIGHT  ( 20.0f )
 #define BASIC_ENEMY_WIDTH   ( 20.0f )
 
-#define BASE_ENEMY_VELOCITY ( 1.0f )
+#define BASE_ENEMY_VELOCITY ( 0.5f )
 
 // Enumerations
 typedef enum {
