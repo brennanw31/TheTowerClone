@@ -11,8 +11,10 @@ for( int i = 0; i < enemy_count; i++ )
     {
     rect.height = enemies[i].geo.height;
     rect.width = enemies[i].geo.width;
-    rect.x = enemies[i].geo.posn.x;
-    rect.y = enemies[i].geo.posn.y;
+
+    // Position them based on the center of the square, not the top left corner
+    rect.x = enemies[i].geo.posn.x - BASIC_ENEMY_WIDTH / 2.0f;
+    rect.y = enemies[i].geo.posn.y - BASIC_ENEMY_HEIGHT / 2.0f;
     DrawRectangleRec(rect, MAGENTA);
     }
 }
