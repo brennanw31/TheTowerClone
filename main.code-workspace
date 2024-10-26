@@ -14,7 +14,9 @@
 			"definitions.h": "c",
 			"cmath": "c",
 			"limits": "c",
-			"*.tcc": "c"
+			"*.tcc": "c",
+			"string.h": "c",
+			"enemy.h": "c"
 		}
 	}
 }

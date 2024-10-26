@@ -1,11 +1,8 @@
 // General Includes
 #include "raylib.h"
 #include "definitions.h"
-#include<math.h>
-#include<string.h>
-
-// Memory Constants
-static const Vector2 origin = {HCENTER, VCENTER};
+#include <math.h>
+#include <string.h>
 
 int main(void)
 {
@@ -14,12 +11,10 @@ int main(void)
     SetTargetFPS(FRAMERATE);
 
     // Local variables
-    Rectangle enemies[MAX_ENEMIES] = {};
-    Vector2 posn = {HCENTER, VCENTER - CIRCLE_RADIUS};
-    int frame_counter = potato();
+    Tower_info_type tower = {};
+    Enemy_type enemies[MAX_ENEMIES] = {};
+    int frame_counter = 0;
     int enemy_counter = 0;
-    float enemy_speed = 2.0f;
-    float tower_speed = 9.0f;
 
     // Game loop
     while(!WindowShouldClose())
@@ -27,21 +22,21 @@ int main(void)
         BeginDrawing();
         ClearBackground(RAYWHITE);
 
-        if( frame_counter >= FRAMERATE / 5
+        if( frame_counter >= FRAMERATE
          && enemy_counter < MAX_ENEMIES )
             {
             frame_counter = 0;
-            spawn_basic_enemy(&enemies[enemy_counter++]);
+            spawn_enemy(&enemies[enemy_counter++], tower.range);
             }
-        move_enemies(enemies, enemy_counter, enemy_speed);
+        move_enemies(enemies, enemy_counter);
         draw_enemies(enemies, enemy_counter);
-        draw_tower(&posn, tower_speed);
+        draw_tower(&tower);
 
         for(int i = 0; i < enemy_counter; i++)
             {
-            if( detect_collisions(posn, enemies[i]) )
+            if( detect_sweeper_collision(&tower.sweeper, enemies[i]) )
                 {
-                rect_array_remove( enemies, &enemy_counter, i );
+                despawn_enemy( enemies, &enemy_counter, i );
                 }
             }
 
@@ -54,74 +49,43 @@ int main(void)
     return 0;
 }
 
-// Detect when the sweeping line collides with an enemy
-bool detect_collisions(Vector2 sweeper_posn, Rectangle enemy)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// Draw all enemies.
+void draw_enemies(Enemy_type *enemies, int enemy_count)
 {
-Vector2 enemy_bbox_start_points[ENEMY_BBOX_LINE_COUNT];
-Vector2 enemy_bbox_end_points[ENEMY_BBOX_LINE_COUNT];
-Vector2 collision_point;
-
-get_basic_enemy_lines(enemy, enemy_bbox_start_points, enemy_bbox_end_points);
-
-for(int i = 0; i < ENEMY_BBOX_LINE_COUNT; i++)
-    {
-    if( CheckCollisionLines(origin, sweeper_posn, enemy_bbox_start_points[i], enemy_bbox_end_points[i], &collision_point) )
-        {
-        return true;
-        }
-    }
-return false;
-}
-
-// Advance all enemies toward the origin by 1 unit, depending on speed
-void move_enemies(Rectangle *enemies, int enemy_count, int speed)
-{
-// Don't fucken touch this
+Rectangle rect;
 for( int i = 0; i < enemy_count; i++ )
     {
-    float hdist = enemies[i].x - (float)HCENTER;
-    float vdist = (float)VCENTER - enemies[i].y;
-    float theta = atanf(-1.0f*fabsf(vdist / hdist));
-    
-    enemies[i].x += (hdist > 0.0f) ? (-1.0f * speed * cosf(theta)) : (speed * cosf(theta));
-    enemies[i].y += (vdist > 0.0f) ? (-1.0f * speed * sinf(theta)) : (speed * sinf(theta));
+    rect.height = enemies[i].geo.height;
+    rect.width = enemies[i].geo.width;
+    rect.x = enemies[i].geo.posn.x;
+    rect.y = enemies[i].geo.posn.y;
+    DrawRectangleRec(rect, MAGENTA);
     }
-}
-
-// Retrieve the set of four lines the describe a basic enemy's bounding box in the form of two output arrays.
-// The output arrays are assumed to have a minimum size of 4.
-void get_basic_enemy_lines(Rectangle enemy, Vector2 *out_start_points, Vector2 *out_end_points)
-{
-    // Obtain the start and end points for the top line -> from left to right
-    out_start_points[TOP_LINE].x = enemy.x;
-    out_start_points[TOP_LINE].y = enemy.y;
-    out_end_points[TOP_LINE].x = enemy.x + enemy.width;
-    out_end_points[TOP_LINE].y = enemy.y;
-    
-    // Obtain the start and end points for the right line -> from top to bottom 
-    out_start_points[RIGHT_LINE].x = enemy.x + enemy.width;
-    out_start_points[RIGHT_LINE].y = enemy.y;
-    out_end_points[RIGHT_LINE].x = enemy.x + enemy.width;
-    out_end_points[RIGHT_LINE].y = enemy.y + enemy.height;
-    
-    // Obtain the start and end points for the bottom line -> from left to right
-    out_start_points[BOTTOM_LINE].x = enemy.x;
-    out_start_points[BOTTOM_LINE].y = enemy.y + enemy.height;
-    out_end_points[BOTTOM_LINE].x = enemy.x + enemy.width;
-    out_end_points[BOTTOM_LINE].y = enemy.y + enemy.height;
-    
-    // Obtain the start and end points for the left line -> from top to bottom 
-    out_start_points[LEFT_LINE].x = enemy.x;
-    out_start_points[LEFT_LINE].y = enemy.y;
-    out_end_points[LEFT_LINE].x = enemy.x;
-    out_end_points[LEFT_LINE].y = enemy.y + enemy.height;
 }
 
 // Spawn an enemy at a random location outside the circle and return its data by reference as a rectangle.
-void spawn_basic_enemy(Rectangle *enemy)
+void spawn_enemy(Enemy_type *enemy, float tower_radius)
 {
-    enemy->height = BASIC_ENEMY_HEIGHT;
-    enemy->width = BASIC_ENEMY_WIDTH;
+    enemy->geo.height = BASIC_ENEMY_HEIGHT;
+    enemy->geo.width = BASIC_ENEMY_WIDTH;
     Vector2 posn;
 
     // Ensure the enemy does not spawn inside the circle
@@ -130,87 +94,136 @@ void spawn_basic_enemy(Rectangle *enemy)
         posn.x = GetRandomValue(0, SCREEN_WIDTH);
         posn.y = GetRandomValue(0, SCREEN_HEIGHT);
         }
-    while( CheckCollisionPointCircle(posn, origin, CIRCLE_RADIUS + SPAWN_BUFFER) );
+    while( CheckCollisionPointCircle(posn, s_screen_origin, tower_radius + SPAWN_BUFFER) );
 
-    enemy->x = posn.x;
-    enemy->y = posn.y;
+    enemy->geo.posn.x = posn.x;
+    enemy->geo.posn.y = posn.y;
 }
 
-// Draw all enemies.
-void draw_enemies( Rectangle *enemies, int enemy_count)
+// Advance all enemies toward the origin by 1 unit, depending on speed
+void move_enemies(Enemy_type *enemies, int enemy_count)
 {
+// Local macro for readability    
+#define geo enemies[i].geo
+
+//Local variables
+float hdist;
+float vdist;
+float theta;
+
 for( int i = 0; i < enemy_count; i++ )
     {
-    DrawRectangleRec(enemies[i], MAGENTA);
+    // Get the vertical and horizontal distance components between the enemy and the center of the screen
+    hdist = geo.posn.x - (float)HCENTER;
+    vdist = geo.posn.y - (float)VCENTER;
+
+    // Solve for the angle of approach using the arctangent of the ratio of distance components
+    theta = atanf(fabsf(vdist / hdist));
+    
+    // Increment or decrement the x coordinate using the cosine of the angle, and the y coordinate using the sine.
+    geo.posn.x += (hdist > 0.0f) ? (-1.0f * geo.velocity.x * cosf(theta)) : (geo.velocity.x * cosf(theta));
+    geo.posn.y += (vdist > 0.0f) ? (-1.0f * geo.velocity.y * sinf(theta)) : (geo.velocity.y * sinf(theta));
     }
+
+// Remove local macro
+#undef geo
 }
 
-// Draw the main tower to be defended.
-void draw_tower(Vector2 *posn, float speed)
+// Retrieve the set of four lines the describe a basic enemy's bounding box in the form of two output arrays.
+// The output arrays are assumed to have a minimum size of 4.
+void get_basic_enemy_lines(Enemy_geometry_type geo, Vector2 *out_start_points, Vector2 *out_end_points)
 {
-    // Draw a circle with a radius line moving around it clockwise
-    float hdist = posn->x - (float)HCENTER;
-    float vdist = (float)VCENTER - posn->y;
-
-    // Deduce which quartile of the circle the sweeper is in
-    Quartile_type quartile;
-    if( fabsf(hdist) > fabsf(vdist) )
-        {
-        quartile = (hdist > 0.0f) ? RIGHT_QUARTILE : LEFT_QUARTILE;
-        }
-    else
-        {
-        quartile = (vdist > 0.0f) ? UPPER_QUARTILE : LOWER_QUARTILE;
-        }
-
-    // Achieve the motion by incrementing one coordinate and then adjusting the other according to the formula for a circle:      x^2 + y^2 = r^2
-    switch( quartile % 4 )
-        {
-        // Increment x and adjust y when in Upper Quartile
-        case UPPER_QUARTILE:
-            posn->x += speed;
-            hdist += speed;
-            posn->y = (float)VCENTER - sqrtf(fabsf(powf(CIRCLE_RADIUS, 2.0f) - powf(hdist, 2.0f )));
-            break;
-
-        // Increment y and adjust x when in Right Quartile
-        case RIGHT_QUARTILE:
-            posn->y += speed;
-            vdist += speed;
-            posn->x = (float)HCENTER + sqrtf(fabsf(powf(CIRCLE_RADIUS, 2.0f) - powf(vdist, 2.0f )));
-            break;
-
-        // Decrement x and adjust y when in Lower Quartile
-        case LOWER_QUARTILE:
-            posn->x -= speed;
-            hdist -= speed;
-            posn->y = (float)VCENTER + sqrtf(fabsf(powf(CIRCLE_RADIUS, 2.0f) - powf(hdist, 2.0f )));
-            break;
-
-        // Decrement y and adjust x when in Left Quartile
-        case LEFT_QUARTILE:
-            posn->y -= speed;
-            vdist -= speed;
-            posn->x = (float)HCENTER - sqrtf(fabsf(powf(CIRCLE_RADIUS, 2.0f) - powf(vdist, 2.0f )));
-            break;
-        }
-
-    // Draw the sweeping line
-    DrawLineEx(origin, *posn, 3.0f, BLACK);
-
-    // Draw the small circle at the origin of the line
-    DrawCircleV(origin, 15.0f, BLACK);
-
-    // Draw the thin outer ring
-    DrawRing(origin, CIRCLE_RADIUS - 1.5f, CIRCLE_RADIUS + 1.5f, 0.0f, 360.0f, 36, BLACK);
+    // Obtain the start and end points for the top line -> from left to right
+    out_start_points[TOP_LINE].x = geo.posn.x;
+    out_start_points[TOP_LINE].y = geo.posn.y;
+    out_end_points[TOP_LINE].x = geo.posn.x + geo.width;
+    out_end_points[TOP_LINE].y = geo.posn.y;
+    
+    // Obtain the start and end points for the right line -> from top to bottom 
+    out_start_points[RIGHT_LINE].x = geo.posn.x + geo.width;
+    out_start_points[RIGHT_LINE].y = geo.posn.y;
+    out_end_points[RIGHT_LINE].x = geo.posn.x + geo.width;
+    out_end_points[RIGHT_LINE].y = geo.posn.y + geo.height;
+    
+    // Obtain the start and end points for the bottom line -> from left to right
+    out_start_points[BOTTOM_LINE].x = geo.posn.x;
+    out_start_points[BOTTOM_LINE].y = geo.posn.y + geo.height;
+    out_end_points[BOTTOM_LINE].x = geo.posn.x + geo.width;
+    out_end_points[BOTTOM_LINE].y = geo.posn.y + geo.height;
+    
+    // Obtain the start and end points for the left line -> from top to bottom 
+    out_start_points[LEFT_LINE].x = geo.posn.x;
+    out_start_points[LEFT_LINE].y = geo.posn.y;
+    out_end_points[LEFT_LINE].x = geo.posn.x;
+    out_end_points[LEFT_LINE].y = geo.posn.y + geo.height;
 }
 
-// Remove an item from an array of rectangles
-void rect_array_remove( Rectangle *arr, int *arr_size, int index )
+// Despawn enemy by removing it from the array of enemies
+void despawn_enemy( Enemy_type *arr, int *arr_size, int index )
 {
     if( *arr_size > 0 )
         {
-        memmove( &arr[index], &arr[index + 1], (*arr_size - index - 1) * sizeof(Rectangle) );
+        memmove( &arr[index], &arr[index + 1], (*arr_size - index - 1) * sizeof(Enemy_type) );
         *arr_size -= 1;
         }
-} 
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// Draw the main tower to be defended.
+void draw_tower(Tower_info_type* tower)
+{
+    // Draw the tower's outer radius
+    DrawRing(s_screen_origin, tower->range - 10.0f, tower->range, 0.0f, 360.0f, 36, LIGHTGRAY);
+
+    // Draw the main tower
+    DrawTriangle(TOWER_TOP_POINT, TOWER_LEFT_POINT, TOWER_RIGHT_POINT, RED);
+}
+
+// Draw a sweeper -> a line that swings around a point clockwise
+void draw_sweeper(Sweeper_info_type* sweeper)
+{
+}
+
+// Detect when the sweeping line collides with an enemy
+bool detect_sweeper_collision(Sweeper_info_type* sweeper, Enemy_type enemy)
+{
+Vector2 enemy_bbox_start_points[ENEMY_BBOX_LINE_COUNT];
+Vector2 enemy_bbox_end_points[ENEMY_BBOX_LINE_COUNT];
+Vector2 sweeper_end_point;
+Vector2 collision_point;
+
+sweeper_end_point.x = sweeper->radius * cosf(sweeper->theta);
+sweeper_end_point.y = sweeper->radius * cosf(sweeper->theta);
+
+get_basic_enemy_lines(enemy.geo, enemy_bbox_start_points, enemy_bbox_end_points);
+
+for(int i = 0; i < ENEMY_BBOX_LINE_COUNT; i++)
+    {
+    if( CheckCollisionLines(s_screen_origin, sweeper_end_point, enemy_bbox_start_points[i], enemy_bbox_end_points[i], &collision_point) )
+        {
+        return true;
+        }
+    }
+return false;
+}
