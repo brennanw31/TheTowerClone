@@ -13,12 +13,27 @@
 #define SCREEN_HEIGHT   ( 720 )
 #define FRAMERATE       ( 240 )
 
+#define SPAWN_BUFFER    ( 25.0f )
+#define MAX_ENEMIES     ( 1 )
+#define MAX_POJECTILES  ( 50 )
+
 // Coordinate helpers
 #define HCENTER         ( SCREEN_WIDTH / 2 )
 #define VCENTER         ( SCREEN_HEIGHT / 2 )
 
+// Invalidity
+#define INV_FLOAT       ( 9.0E20f )
+#define INV_INDEX       ( -1 )
+
 // Enumerations
-enum{
+typedef enum {
+    TOP_LEFT_QUADRANT,
+    TOP_RIGHT_QUADRANT,
+    BOTTOM_RIGHT_QUADRANT,
+    BOTTOM_LEFT_QUADRANT
+    }Screen_quadrant_enum;
+
+enum {
     TOP_LINE,
     RIGHT_LINE,
     BOTTOM_LINE,
@@ -34,5 +49,9 @@ typedef struct {
 
 // Memory Constants
 static const Vector2 s_screen_origin = { HCENTER, VCENTER };
+
+// Utility functions
+float calc_distance(Vector2 point1, Vector2 point2);
+float calc_enemy_approach_angle(Enemy_type enemy);
 
 #endif

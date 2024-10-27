@@ -32,9 +32,11 @@
 #define BASE_BOUNCE_SHOT_MAX_TARGETS    ( 1.0f )
 #define BASE_BOUNCE_SHOT_RADIUS         ( 1.0f )
 
-#define BASE_RANGE          ( 150.0f )
-#define BASE_DAMAGE         ( 1.0f )
-#define BASE_ATTACK_SPEED   ( 1.0f )
+#define BASE_RANGE              ( 150.0f )
+#define BASE_DAMAGE             ( 1.0f )
+#define BASE_ATTACK_SPEED       ( 1.0f )
+#define BASE_PROJECTILE_SPEED   ( 1.0f )
+#define BASE_PROJECTILE_RADIUS  ( 2.5f )
 
 // Tower types
 typedef struct {
@@ -88,12 +90,23 @@ typedef struct {
     float                   range;
     float                   attack_speed;
     float                   damage;
+    float                   projectile_speed;
     }Tower_info_type;
+
+typedef struct {
+    Vector2     posn;
+    float       theta;
+    float       speed;
+    }Projectile_info_type;
 
 // Tower function definitions
 void init_tower(Tower_info_type* tower);
 void draw_tower(Tower_info_type* tower);
 void draw_sweeper(Sweeper_info_type* sweeper);
 bool detect_sweeper_collision(Sweeper_info_type* sweeper, Enemy_type enemy);
+int detect_enemies_in_range(Tower_info_type *tower, Enemy_type *enemies, int enemy_count);
+void shoot_projectile(Tower_info_type *tower, Enemy_type enemy, Projectile_info_type *out_projectile);
+void move_projectiles(Projectile_info_type *projectiles, int projectile_count);
+void draw_projectiles(Projectile_info_type *projectiles, int projectile_count);
 
 #endif

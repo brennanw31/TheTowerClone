@@ -33,6 +33,7 @@ void init_tower(Tower_info_type* tower)
     tower->range                    = BASE_RANGE;
     tower->damage                   = BASE_DAMAGE;
     tower->attack_speed             = BASE_ATTACK_SPEED;
+    tower->projectile_speed         = BASE_PROJECTILE_SPEED;
 }
 
 // Draw the main tower to be defended.
@@ -71,4 +72,106 @@ for(int i = 0; i < ENEMY_BBOX_LINE_COUNT; i++)
         }
     }
 return false;
+}
+
+// Detect enemies that are within the tower's range. The function returns the index of the closest enemy, -1 if none are found.
+int detect_enemies_in_range(Tower_info_type *tower, Enemy_type *enemies, int enemy_count)
+{
+    Rectangle   enemy_bbox;
+    Vector2     curr_enemy_posn;
+    float       curr_enemy_distance;
+    float       closest_enemy_distance;
+    int         closest_enemy_index;
+
+    // Assign large value so that any tower in range will be closer
+    closest_enemy_distance = INV_FLOAT;
+    closest_enemy_index = INV_INDEX;
+
+    for(int i = 0; i < enemy_count; i++)
+        {
+        // Copy enemy data into placeholder variable
+        enemy_bbox.height = enemies[i].geo.height;
+        enemy_bbox.width = enemies[i].geo.width;
+        enemy_bbox.x = enemies[i].geo.posn.x;
+        enemy_bbox.y = enemies[i].geo.posn.y;
+
+        // Store enemy position as a vector to check distance
+        curr_enemy_posn.x = enemies[i].geo.posn.x;
+        curr_enemy_posn.y = enemies[i].geo.posn.y;
+        curr_enemy_distance = calc_distance(s_screen_origin, curr_enemy_posn);
+
+        if( CheckCollisionCircleRec(s_screen_origin, tower->range, enemy_bbox)
+         && curr_enemy_distance < closest_enemy_distance)
+            {
+            closest_enemy_distance = curr_enemy_distance;
+            closest_enemy_index = i;
+            }
+        }
+
+    return closest_enemy_index;
+}
+
+// Create a projectile aimed at the enemy passed in and return it as an output parameter
+void shoot_projectile(Tower_info_type *tower, Enemy_type enemy, Projectile_info_type *out_projectile)
+{
+    // Local variables
+    float enemy_hdist;
+    float enemy_vdist;
+
+    // Initialize projectile speed
+    out_projectile->speed = tower->projectile_speed;
+
+    // Determine the angle of the projectile
+    enemy_hdist = enemy.geo.posn.x - (float)HCENTER;
+    enemy_vdist = enemy.geo.posn.y - (float)VCENTER;
+    out_projectile->theta = atanf(enemy_vdist / enemy_hdist);
+
+    // Move the projectile into the quadrant of the screen that it will go -> this helps with calculating its trajectory later
+    if( out_projectile->theta > 0.0f )
+        {
+        out_projectile->posn = (enemy_hdist > 0.0f) ?
+                                    (Vector2){(float)HCENTER + 1.0f, (float)VCENTER + 1.0f}      // Bottom-right quadrant
+                                    :
+                                    (Vector2){(float)HCENTER - 1.0f, (float)VCENTER - 1.0f};     // Top-left quadrant
+        }
+    else
+        {
+        out_projectile->posn = (enemy_vdist > 0.0f) ?
+                                    (Vector2){(float)HCENTER - 1.0f, (float)VCENTER + 1.0f}     // Bottom-left quadrant
+                                    :
+                                    (Vector2){(float)HCENTER + 1.0f, (float)VCENTER - 1.0f};    // Top-right quadrant
+        }
+}
+
+// Draw all projectiles
+void draw_projectiles(Projectile_info_type *projectiles, int projectile_count)
+{
+    for(int i = 0; i < projectile_count; i++)
+        {
+        DrawCircle((int)projectiles[i].posn.x, (int)projectiles[i].posn.y, BASE_PROJECTILE_RADIUS, BLACK);
+        }
+}
+
+// Advance all projectiles toward their targetted enemy by 1 unit, depending on speed
+// Sadly I don't understand why this works but it does - TODO refactor and comment when better understood
+void move_projectiles(Projectile_info_type *projectiles, int projectile_count)
+{
+    float hdist;
+    float vdist;
+
+    for(int i = 0; i < projectile_count; i++)
+        {
+        hdist = projectiles[i].posn.x - (float)HCENTER;
+        vdist = projectiles[i].posn.y - (float)VCENTER;
+
+        projectiles[i].posn.x += (hdist < 0.0f) ? (-1.0f * projectiles[i].speed * cosf( projectiles[i].theta)) : (projectiles[i].speed * cosf( projectiles[i].theta));
+        if( projectiles[i].theta > 0.0f )
+            {
+            projectiles[i].posn.y += (vdist < 0.0f) ? (-1.0f * projectiles[i].speed * sinf( projectiles[i].theta)) : (projectiles[i].speed * sinf( projectiles[i].theta));
+            }
+        else
+            {
+            projectiles[i].posn.y -= (vdist < 0.0f) ? (-1.0f * projectiles[i].speed * sinf( projectiles[i].theta)) : (projectiles[i].speed * sinf( projectiles[i].theta));
+            }
+        }    
 }
