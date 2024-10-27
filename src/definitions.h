@@ -53,5 +53,6 @@ static const Vector2 s_screen_origin = { HCENTER, VCENTER };
 // Utility functions
 float calc_distance(Vector2 point1, Vector2 point2);
 float calc_enemy_approach_angle(Enemy_type enemy);
+void array_remove( void *arr, int *arr_size, size_t elem_size, int index );
 
 #endif

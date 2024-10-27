@@ -38,9 +38,13 @@ void spawn_enemy(float tower_radius, Enemy_type *out_enemy)
         || posn.x == (float)HCENTER
         || posn.y == (float)VCENTER );
 
+    // Assign the randomly generated position
     out_enemy->geo.posn.x = posn.x;
     out_enemy->geo.posn.y = posn.y;
     out_enemy->geo.speed = BASE_ENEMY_SPEED;
+
+    // Assign a random ID - hopefully there's never a collision
+    out_enemy->id = GetRandomValue(0, __INT32_MAX__);
 }
 
 // Advance all enemies toward the origin by 1 unit, depending on speed
@@ -91,14 +95,4 @@ void get_basic_enemy_lines(Enemy_geometry_type geo, Vector2 *out_start_points, V
     out_start_points[LEFT_LINE].y = geo.posn.y;
     out_end_points[LEFT_LINE].x = geo.posn.x;
     out_end_points[LEFT_LINE].y = geo.posn.y + geo.height;
-}
-
-// Despawn enemy by removing it from the array of enemies
-void despawn_enemy( Enemy_type *arr, int *arr_size, int index )
-{
-    if( *arr_size > 0 )
-        {
-        memmove( &arr[index], &arr[index + 1], (*arr_size - index - 1) * sizeof(Enemy_type) );
-        *arr_size -= 1;
-        }
 }

@@ -97,15 +97,17 @@ typedef struct {
     Vector2     posn;
     float       theta;
     float       speed;
+    int         target_id;
     }Projectile_info_type;
 
 // Tower function definitions
 void init_tower(Tower_info_type* tower);
 void draw_tower(Tower_info_type* tower);
 void draw_sweeper(Sweeper_info_type* sweeper);
-bool detect_sweeper_collision(Sweeper_info_type* sweeper, Enemy_type enemy);
+bool detect_sweeper_collision(Sweeper_info_type sweeper, Enemy_type enemy);
 int detect_enemies_in_range(Tower_info_type *tower, Enemy_type *enemies, int enemy_count);
 void shoot_projectile(Tower_info_type *tower, Enemy_type enemy, Projectile_info_type *out_projectile);
+bool detect_projectile_collision(Projectile_info_type projectile, Enemy_type enemy);
 void move_projectiles(Projectile_info_type *projectiles, int projectile_count);
 void draw_projectiles(Projectile_info_type *projectiles, int projectile_count);
 

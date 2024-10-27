@@ -49,6 +49,21 @@ int main(void)
             }
         move_projectiles(projectiles, projectile_counter);
 
+        // Detect projectile hits
+        for(int i = 0; i < projectile_counter; i++)
+            {
+            for(int j = 0; j < enemy_counter; j++)
+                {
+                if( projectiles[i].target_id == enemies[j].id
+                 && detect_projectile_collision( projectiles[i], enemies[j]) )
+                    {
+                    // Projectile hit detected - delete both the projectile and the enemy
+                    array_remove(projectiles, &projectile_counter, sizeof(Projectile_info_type), i);
+                    array_remove(enemies, &enemy_counter, sizeof(Enemy_type), j);
+                    }
+                }
+            }
+
         // Draw all screen elements
         draw_enemies(enemies, enemy_counter);
         draw_projectiles(projectiles, projectile_counter);
@@ -77,4 +92,14 @@ float calc_enemy_approach_angle(Enemy_type enemy)
 {
     // Solve for the angle of approach using the arctangent of the ratio of distance components
     return atanf(fabsf((enemy.geo.posn.y - (float)VCENTER) / (enemy.geo.posn.x - (float)HCENTER)));
+}
+
+// Remove an item from an array of any type - this function will decremet the array count passed in
+void array_remove( void *arr, int *arr_size, size_t elem_size, int index )
+{
+    if( *arr_size > 0 )
+        {
+        memmove( arr + index, arr + index + 1, (*arr_size - index - 1) * elem_size );
+        *arr_size -= 1;
+        }
 }

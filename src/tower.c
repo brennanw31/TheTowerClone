@@ -52,15 +52,15 @@ void draw_sweeper(Sweeper_info_type* sweeper)
 }
 
 // Detect when the sweeping line collides with an enemy
-bool detect_sweeper_collision(Sweeper_info_type* sweeper, Enemy_type enemy)
+bool detect_sweeper_collision(Sweeper_info_type sweeper, Enemy_type enemy)
 {
 Vector2 enemy_bbox_start_points[ENEMY_BBOX_LINE_COUNT];
 Vector2 enemy_bbox_end_points[ENEMY_BBOX_LINE_COUNT];
 Vector2 sweeper_end_point;
 Vector2 collision_point;
 
-sweeper_end_point.x = sweeper->radius * cosf(sweeper->theta);
-sweeper_end_point.y = sweeper->radius * cosf(sweeper->theta);
+sweeper_end_point.x = sweeper.radius * cosf(sweeper.theta);
+sweeper_end_point.y = sweeper.radius * cosf(sweeper.theta);
 
 get_basic_enemy_lines(enemy.geo, enemy_bbox_start_points, enemy_bbox_end_points);
 
@@ -72,6 +72,19 @@ for(int i = 0; i < ENEMY_BBOX_LINE_COUNT; i++)
         }
     }
 return false;
+}
+
+// Detect when a projectile impacts its targeted enemy
+bool detect_projectile_collision(Projectile_info_type projectile, Enemy_type enemy)
+{
+    Rectangle enemy_bbox;
+
+    enemy_bbox.height = enemy.geo.height;
+    enemy_bbox.width = enemy.geo.width;
+    enemy_bbox.x = enemy.geo.posn.x;
+    enemy_bbox.y = enemy.geo.posn.y;
+
+    return CheckCollisionCircleRec(projectile.posn, BASE_PROJECTILE_RADIUS, enemy_bbox);
 }
 
 // Detect enemies that are within the tower's range. The function returns the index of the closest enemy, -1 if none are found.
@@ -118,8 +131,9 @@ void shoot_projectile(Tower_info_type *tower, Enemy_type enemy, Projectile_info_
     float enemy_hdist;
     float enemy_vdist;
 
-    // Initialize projectile speed
+    // Initialize projectile speed and target
     out_projectile->speed = tower->projectile_speed;
+    out_projectile->target_id = enemy.id;
 
     // Determine the angle of the projectile
     enemy_hdist = enemy.geo.posn.x - (float)HCENTER;
