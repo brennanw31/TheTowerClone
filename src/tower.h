@@ -34,7 +34,7 @@
 
 #define BASE_RANGE              ( 150.0f )
 #define BASE_DAMAGE             ( 1.0f )
-#define BASE_ATTACK_SPEED       ( 1.0f )
+#define BASE_ATTACK_SPEED       ( 2.0f )
 #define BASE_PROJECTILE_SPEED   ( 1.0f )
 #define BASE_PROJECTILE_RADIUS  ( 2.5f )
 

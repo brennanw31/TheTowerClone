@@ -39,7 +39,7 @@ int main(void)
         close_enemy_index = detect_enemies_in_range(&tower, enemies, enemy_counter);
 
         // Check that enough time has passes and there aren't already too many projectiles
-        if( projectile_timer >= FRAMERATE
+        if( (float)projectile_timer >= (float)FRAMERATE / tower.attack_speed
          && projectile_counter < MAX_POJECTILES
          && close_enemy_index != INV_INDEX)
             {
@@ -48,6 +48,11 @@ int main(void)
             shoot_projectile(&tower, enemies[close_enemy_index], &projectiles[projectile_counter++]);
             }
         move_projectiles(projectiles, projectile_counter);
+
+        // Draw all screen elements
+        draw_enemies(enemies, enemy_counter);
+        draw_projectiles(projectiles, projectile_counter);
+        draw_tower(&tower);
 
         // Detect projectile hits
         for(int i = 0; i < projectile_counter; i++)
@@ -58,16 +63,13 @@ int main(void)
                  && detect_projectile_collision( projectiles[i], enemies[j]) )
                     {
                     // Projectile hit detected - delete both the projectile and the enemy
-                    array_remove(projectiles, &projectile_counter, sizeof(Projectile_info_type), i);
-                    array_remove(enemies, &enemy_counter, sizeof(Enemy_type), j);
+                    array_remove(projectiles, i);
+                    projectile_counter--;
+                    array_remove(enemies, j);
+                    enemy_counter--;
                     }
                 }
             }
-
-        // Draw all screen elements
-        draw_enemies(enemies, enemy_counter);
-        draw_projectiles(projectiles, projectile_counter);
-        draw_tower(&tower);
 
         EndDrawing();
         enemy_spawn_timer++;
@@ -92,14 +94,4 @@ float calc_enemy_approach_angle(Enemy_type enemy)
 {
     // Solve for the angle of approach using the arctangent of the ratio of distance components
     return atanf(fabsf((enemy.geo.posn.y - (float)VCENTER) / (enemy.geo.posn.x - (float)HCENTER)));
-}
-
-// Remove an item from an array of any type - this function will decremet the array count passed in
-void array_remove( void *arr, int *arr_size, size_t elem_size, int index )
-{
-    if( *arr_size > 0 )
-        {
-        memmove( arr + index, arr + index + 1, (*arr_size - index - 1) * elem_size );
-        *arr_size -= 1;
-        }
 }

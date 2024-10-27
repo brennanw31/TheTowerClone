@@ -14,7 +14,7 @@
 #define FRAMERATE       ( 240 )
 
 #define SPAWN_BUFFER    ( 25.0f )
-#define MAX_ENEMIES     ( 1 )
+#define MAX_ENEMIES     ( 25 )
 #define MAX_POJECTILES  ( 50 )
 
 // Coordinate helpers
@@ -24,6 +24,9 @@
 // Invalidity
 #define INV_FLOAT       ( 9.0E20f )
 #define INV_INDEX       ( -1 )
+
+// Macros
+#define array_remove( arr, idx )    memmove( &arr[idx], &arr[idx + 1], (sizeof(arr)/sizeof(arr[0]) - idx - 1) * sizeof(arr[0]))
 
 // Enumerations
 typedef enum {
@@ -53,6 +56,5 @@ static const Vector2 s_screen_origin = { HCENTER, VCENTER };
 // Utility functions
 float calc_distance(Vector2 point1, Vector2 point2);
 float calc_enemy_approach_angle(Enemy_type enemy);
-void array_remove( void *arr, int *arr_size, size_t elem_size, int index );
 
 #endif
